@@ -4,13 +4,16 @@ const router = express.Router();
 
 const pool = new Pool();
 
-// GET time
-// router.get('/time', (req, res) => {
-//   pool
-//   .query('SELECT NOW()')
-//   .then(data => res.json(data.rows[0]))
-//   .catch(err => res.send(err))
-// })
+const authMiddleware = (req, res, next) => {
+  const secretToken = process.env.SECRET_TOKEN;
+  const userToken = req.body.token;
+
+  if(!userToken || userToken !== secretToken){
+    res.status(401).json({error: 'Unauthorized'})
+  } else {
+    next()
+  }
+}
 
 //GET Create an endpoint to retrieve all films
 router.get('/', (req, res) => {
@@ -39,7 +42,7 @@ router.post('/', (req, res) => {
 })
 
 // PUT Create an enspoint that updates an existing film in films table
-router.put('/:id', (req, res) => {
+router.put('/:id', authMiddleware, (req, res) => {
   const id = req.params.id;
   const {name} = req.body;
   pool
