@@ -1,76 +1,72 @@
 const express = require('express');
 const router = express.Router();
-const Film = require('../')
+const Film = require("../models/Film");
 
-
-
-//GET Create an endpoint to retrieve all films
-router.get('/', (req, res) => {
-  pool
-  .query('SELECT * from films;')
-  .then(({rows}) => res.json(rows))
-  .catch(e => res.sendStatus(500))
+//POST Create an endpoint that creates a new film in films collection
+router.post('/', (req, res) => {
+  const {name, year, genre} = req.body;
+  Film.create({name, year, genre})
+  .then((data) => res.json(data))
+  .catch((e) => console.log(e.message))
 })
 
-//GET Create an endpoint that a specific film
-router.get("/:id", (req, res) => {
-  const id = req.params.id
-  pool
-  .query('SELECT * from films WHERE id=$1;', [id])
-  .then(({rows}) => res.json(rows))
-  .catch(e => res.sendStatus(500))
+// //GET Create an endpoint to retrieve all films
+router.get('/', (req, res) => {
+  Film.find({})
+    .then(data => res.json(data))
 });
 
-//POST Create an endpoint that creates a new film/row in films table
-router.post('/', (req, res) => {
-  const {name, year, genre } = req.body;
-  pool
-  .query('INSERT INTO films(name, year, genre ) VALUES ($1, $2, $3) RETURNING *;', [name, year, genre])
-  .then(({rows}) => res.json(rows))
-  .catch(e => res.sendStatus(500))
-})
-
-
-const authMiddleware = (req, res, next) => {
-  const secretToken = process.env.SECRET_TOKEN;
-  const userToken = req.body.token;
-
-  if(!userToken || userToken !== secretToken){
-    res.status(401).json({error: 'Unauthorized'})
-  } else {
-    next()
-  }
-}
-
-const validationMiddleware = (req, res, next) => {
-  const {name} = req.body;
-  if(!name) {
-    return res.status(400).json({error: 'Name is required'})
-  } 
-  next()
-}
+// //GET Create an endpoint to retrieve s specific film by id
+router.get('/:id', (req, res) => {
+  const { id } = req.params;
+  Film.findById(id)
+    .then(data => {
+      if (!data) {
+        // Send 404 if no film is found with the specified _id
+        return res.sendStatus(404); 
+      }
+      res.json(data);
+    })
+    .catch(err => {
+      console.log(err.message);
+      res.sendStatus(500);
+    });
+});
 
 // PUT Create an enspoint that updates an existing film in films table
-router.put('/:id', [authMiddleware, validationMiddleware], (req, res) => {
-  const id = req.params.id;
-  const {name} = req.body;
-  
-  pool
-  .query('UPDATE films SET name=$1 WHERE id=$2 RETURNING *;', [name, id])
-  .then(({rows}) => res.json(rows))
-  .catch(e => res.sendStatus(500))
-})
+router.put('/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, year, genre } = req.body;
+  Film.findByIdAndUpdate(id, { name, year, genre }, { new: true })
+    .then(data => {
+      if (!data) {
+        // Send 404 if no film is found with the specified _id
+        return res.sendStatus(404); 
+      }
+      res.json(data);
+    })
+    .catch(err => {
+      console.log(err.message);
+      res.sendStatus(500);
+    });
+});
 
-//DELETE Create an endpoint that deletes an existing film in films table
+// DELETE Create an enDpoint that DELETES an existing film in films collection
 router.delete('/:id', (req, res) => {
-  const id = req.params.id
-  pool
-  .query('DELETE FROM films WHERE id=$1;', [id])
-  .then(({rows}) => res.json(rows))
-  .catch(e => {
-    console.log(e, 'error')
-    res.sendStatus(500)
-  })
-})
+  const id = req.params.id;
+  Film.findByIdAndDelete(id)
+    .then(data => {
+      if (!data) {
+        // Send 404 if no film is found with the specified _id
+        return res.sendStatus(404); 
+      }
+      res.sendStatus(204);
+    })
+    .catch(err => {
+      console.log(err.message);
+      res.sendStatus(500);
+    });
+});
+
 
 module.exports = router
