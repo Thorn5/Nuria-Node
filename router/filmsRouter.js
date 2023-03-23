@@ -1,19 +1,8 @@
-const { Pool } = require('pg')
 const express = require('express');
 const router = express.Router();
+const Film = require('../')
 
-const pool = new Pool();
 
-const authMiddleware = (req, res, next) => {
-  const secretToken = process.env.SECRET_TOKEN;
-  const userToken = req.body.token;
-
-  if(!userToken || userToken !== secretToken){
-    res.status(401).json({error: 'Unauthorized'})
-  } else {
-    next()
-  }
-}
 
 //GET Create an endpoint to retrieve all films
 router.get('/', (req, res) => {
@@ -41,10 +30,31 @@ router.post('/', (req, res) => {
   .catch(e => res.sendStatus(500))
 })
 
+
+const authMiddleware = (req, res, next) => {
+  const secretToken = process.env.SECRET_TOKEN;
+  const userToken = req.body.token;
+
+  if(!userToken || userToken !== secretToken){
+    res.status(401).json({error: 'Unauthorized'})
+  } else {
+    next()
+  }
+}
+
+const validationMiddleware = (req, res, next) => {
+  const {name} = req.body;
+  if(!name) {
+    return res.status(400).json({error: 'Name is required'})
+  } 
+  next()
+}
+
 // PUT Create an enspoint that updates an existing film in films table
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', [authMiddleware, validationMiddleware], (req, res) => {
   const id = req.params.id;
   const {name} = req.body;
+  
   pool
   .query('UPDATE films SET name=$1 WHERE id=$2 RETURNING *;', [name, id])
   .then(({rows}) => res.json(rows))
