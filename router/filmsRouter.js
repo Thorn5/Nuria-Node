@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Film = require("../models/Film");
+const {verifyToken } = require('../middlewares/auth')
 
 //POST Create an endpoint that creates a new film in films collection
-router.post('/', (req, res) => {
+router.post('/', verifyToken, (req, res) => {
   const {name, year, genre} = req.body;
   Film.create({name, year, genre})
   .then((data) => res.json(data))
