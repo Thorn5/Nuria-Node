@@ -9,6 +9,6 @@ mongoose.connect(process.env.MONGO_DB_URI, {
 })
 .catch((e) => console.log(e.message));
 
-const client = mongoose.connection;
+const clients = mongoose.connection;
 
-module.exports = client;
+module.exports = clients;

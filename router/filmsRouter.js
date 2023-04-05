@@ -6,8 +6,11 @@ const {verifyToken } = require('../middlewares/auth')
 //POST Create an endpoint that creates a new film in films collection
 router.post('/', verifyToken, (req, res) => {
   const {name, year, genre} = req.body;
+  if (!name || !year || !genre) {
+    return res.status(400).json({message: "Received incomplete info"});
+}
   Film.create({name, year, genre})
-  .then((data) => res.json(data))
+  .then((data) => res.json({message: "New film created"}))
   .catch((e) => console.log(e.message))
 })
 

@@ -12,10 +12,13 @@ const generateToken = (data) => {
 
 //POST Create an endpoint that creates a new user in users collection
 router.post('/signup', (req, res) => {
-    const {first_name, last_name, email, password} = req.body;
+    const {firstName, lastName, email, password} = req.body;
+    if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({message: "Received incomplete info"});
+    }
     bcrypt.hash(password, 10)
     .then((hashedPasword) => {
-        User.create({first_name, last_name, email, password: hashedPasword})
+        User.create({firstName, lastName, email, password: hashedPasword})
         .then((data) => res.json(data))
         .catch((e) => console.log(e.message))
     })
@@ -25,15 +28,18 @@ router.post('/signup', (req, res) => {
 //POST Create an endpoint for log in user
 router.post('/login', (req, res) => {
     const {email, password} = req.body;
+    if (!email || !password) {
+        return res.status(400).json({message: "Received incomplete info"});
+    }
     User.findOne({email})
     .then((user) => {
         if(!user){
-            return res.status(404).send("Invalid credentials")
+            return res.status(404).json({message: "Invalid credentials"});
         }
         bcrypt.compare(password, user.password)
         .then((validPassword) => {
             if(!validPassword){
-                return res.status(404).send("Invalid credentials")
+                return res.status(404).json({message: "Invalid credentials"});
             }
             const token = generateToken({email: user.email})
             res.json({token});

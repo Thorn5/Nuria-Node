@@ -4,12 +4,13 @@ const secret = process.env.MY_SECRET;
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if(!authHeader) {
-        return res.sendStatus(401)
+        return res.status(401).json({message: "Unauthorized"})
+        
     }
     const token = authHeader.split(' ')[1];
     jwt.verify(token, secret, (err, user) => {
         if(err) {
-            return res.sendStatus(400)
+            return res.status(401).json({message: "Unauthorized"})
         }
         req.user = user;
         next();
